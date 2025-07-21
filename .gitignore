@@ -1,0 +1,63 @@
+# Laravel specific
+/node_modules
+/public/hot
+/public/storage
+/storage/*.key
+/vendor
+.env
+.env.backup
+.phpunit.result.cache
+docker-compose.override.yml
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/.idea
+/.vscode
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+storage/logs/*.log
+
+# Cache
+bootstrap/cache/*.php
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+# Compiled assets
+/public/css
+/public/js
+/public/mix-manifest.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.phpunit.result.cache
+coverage/
+
+# Backup files
+*.bak
+*.backup
+*.sql
+
+# Temporary files
+*.tmp
+*.temp
+
+# Ignore parent directories
+../../*
+../*
