@@ -8,7 +8,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\Builder;
 use PowerComponents\LivewirePowerGrid\Rules\{Rule, RuleActions};
 use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
-use PowerComponents\LivewirePowerGrid\{Button, Column, Exportable, Footer, Header, PowerGrid, PowerGridComponent, PowerGridEloquent};
+use PowerComponents\LivewirePowerGrid\{Button, Column, PowerGrid, PowerGridComponent, PowerGridEloquent};
 
 final class PresenceTable extends PowerGridComponent
 {
@@ -26,19 +26,14 @@ final class PresenceTable extends PowerGridComponent
     | Setup Table's general features
     |
     */
-    public function setUp(): array
+    public function setUp()
     {
-        $this->showCheckBox();
-
-        return [
-            Exportable::make('export')
-                ->striped()
-                ->type(Exportable::TYPE_XLS, Exportable::TYPE_CSV),
-            Header::make()->showSearchInput()->showToggleColumns(),
-            Footer::make()
-                ->showPerPage()
-                ->showRecordCount(),
-        ];
+        $this->showCheckBox()
+            ->showSearchInput()
+            ->showToggleColumns()
+            ->showPerPage()
+            ->showRecordCount()
+            ->showExportOption('presence_export', ['excel', 'csv']);
     }
 
     /*
@@ -54,7 +49,7 @@ final class PresenceTable extends PowerGridComponent
      *
      * @return Builder<\App\Models\Presence>
      */
-    public function datasource(): Builder
+    public function dataSource(): Builder
     {
         return Presence::query()
             ->where('attendance_id', $this->attendanceId)
@@ -119,40 +114,56 @@ final class PresenceTable extends PowerGridComponent
     public function columns(): array
     {
         return [
-            Column::make('ID', 'id')
+            Column::add()
+                ->title('ID')
+                ->field('id')
                 ->searchable()
                 ->sortable(),
 
-            Column::make('Nama', 'user_name')
+            Column::add()
+                ->title('Nama')
+                ->field('user_name')
                 ->searchable()
                 ->makeInputText('users.name')
                 ->sortable(),
 
-            Column::make('Tanggal Hadir', 'presence_date')
-                ->makeInputDatePicker()
+            Column::add()
+                ->title('Tanggal Hadir')
+                ->field('presence_date')
+                ->makeInputDatePicker('presence_date')
                 ->searchable()
                 ->sortable(),
 
-            Column::make('Jam Absen Masuk', 'presence_enter_time')
+            Column::add()
+                ->title('Jam Absen Masuk')
+                ->field('presence_enter_time')
                 ->searchable()
                 // ->makeInputRange('presence_enter_time') // terlalu banyak menggunakan bandwidth (ukuran data yang dikirim terlalu besar)
                 ->makeInputText('presence_enter_time')
                 ->sortable(),
 
-            Column::make('Jam Absen Pulang', 'presence_out_time')
+            Column::add()
+                ->title('Jam Absen Pulang')
+                ->field('presence_out_time')
                 ->searchable()
                 // ->makeInputRange('presence_out_time') // ini juga
                 ->makeInputText('presence_out_time')
                 ->sortable(),
 
-            Column::make('Status', 'is_permission')
+            Column::add()
+                ->title('Status')
+                ->field('is_permission')
                 ->sortable(),
 
-            Column::make('Created at', 'created_at')
+            Column::add()
+                ->title('Created at')
+                ->field('created_at')
                 ->hidden(),
 
-            Column::make('Created at', 'created_at_formatted')
-                ->makeInputDatePicker()
+            Column::add()
+                ->title('Created at')
+                ->field('created_at_formatted')
+                ->makeInputDatePicker('created_at_formatted')
                 ->searchable()
         ];
     }

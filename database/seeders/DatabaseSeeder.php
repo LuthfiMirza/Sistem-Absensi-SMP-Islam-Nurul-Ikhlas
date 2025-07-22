@@ -33,5 +33,8 @@ class DatabaseSeeder extends Seeder
             'role_id' => Role::where('name', 'user')->first('id'), // user === employee
             'position_id' => Position::select('id')->inRandomOrder()->first()->id
         ]);
+
+        // Seed attendance data
+        $this->call(AttendanceSeeder::class);
     }
 }

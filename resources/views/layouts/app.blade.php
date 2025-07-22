@@ -38,4 +38,9 @@
     </div>
 </main>
 
+<!-- Profile Modal for Employees/Teachers -->
+@if(auth()->user()->isUser())
+    @include('partials.profile-modal')
+@endif
+
 @endsection

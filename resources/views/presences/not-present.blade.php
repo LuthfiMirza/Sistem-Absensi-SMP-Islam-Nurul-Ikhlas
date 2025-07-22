@@ -231,10 +231,17 @@
 @section('buttons')
 <div class="btn-toolbar mb-2 mb-md-0">
     <div>
-        <a href="{{ route('presences.show', $attendance->id) }}" class="back-btn">
-            <i class="fas fa-arrow-left"></i>
-            Kembali
-        </a>
+        @if(auth()->user()->isOperator())
+            <a href="{{ route('presences.show', $attendance->id) }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Kembali
+            </a>
+        @else
+            <a href="{{ route('home.detail', $attendance->id) }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Kembali
+            </a>
+        @endif
     </div>
 </div>
 @endsection
@@ -291,10 +298,17 @@
             <i class="fas fa-check-circle"></i>
             <h4 class="text-success mb-3">Semua Karyawan Sudah Absen!</h4>
             <p class="text-muted mb-4">Tidak ada karyawan yang belum melakukan absensi untuk tanggal yang dipilih.</p>
-            <a href="{{ route('presences.not-present', $attendance->id) }}" class="btn btn-primary">
-                <i class="fas fa-calendar-day me-2"></i>
-                Tampilkan Data Hari Ini
-            </a>
+            @if(auth()->user()->isOperator())
+                <a href="{{ route('presences.not-present', $attendance->id) }}" class="btn btn-primary">
+                    <i class="fas fa-calendar-day me-2"></i>
+                    Tampilkan Data Hari Ini
+                </a>
+            @else
+                <a href="{{ route('home.not-present', $attendance->id) }}" class="btn btn-primary">
+                    <i class="fas fa-calendar-day me-2"></i>
+                    Tampilkan Data Hari Ini
+                </a>
+            @endif
         </div>
     @else
         @foreach ($notPresentData as $data)
@@ -326,22 +340,24 @@
                         <thead>
                             <tr>
                                 <th scope="col" width="5%">#</th>
-                                <th scope="col" width="20%">
+                                <th scope="col" width="{{ auth()->user()->isOperator() ? '20%' : '25%' }}">
                                     <i class="fas fa-user me-2"></i>
                                     Nama Karyawan
                                 </th>
-                                <th scope="col" width="30%">
+                                <th scope="col" width="{{ auth()->user()->isOperator() ? '30%' : '35%' }}">
                                     <i class="fas fa-envelope me-2"></i>
                                     Kontak
                                 </th>
-                                <th scope="col" width="20%">
+                                <th scope="col" width="{{ auth()->user()->isOperator() ? '20%' : '35%' }}">
                                     <i class="fas fa-briefcase me-2"></i>
                                     Posisi
                                 </th>
+                                @if(auth()->user()->isOperator())
                                 <th scope="col" width="25%">
                                     <i class="fas fa-cogs me-2"></i>
                                     Aksi
                                 </th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -374,6 +390,7 @@
                                         {{ $user['position']['name'] }}
                                     </span>
                                 </td>
+                                @if(auth()->user()->isOperator())
                                 <td>
                                     <form action="{{ route('presences.present', $attendance->id) }}" method="post" class="d-inline">
                                         @csrf
@@ -386,6 +403,7 @@
                                         </button>
                                     </form>
                                 </td>
+                                @endif
                             </tr>
                             @endforeach
                         </tbody>

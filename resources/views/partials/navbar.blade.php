@@ -15,10 +15,21 @@
         <!-- Right side content -->
         <div class="navbar-nav flex-row ms-auto me-3">
             <div class="nav-item text-nowrap">
-                <span class="navbar-text">
-                    <i class="fas fa-user-circle me-1"></i>
-                    {{ auth()->user()->name }}
-                </span>
+                @if(auth()->user()->isUser())
+                    <!-- Profile Button for Employees/Teachers -->
+                    <button type="button" class="btn profile-btn" 
+                            data-bs-toggle="modal" data-bs-target="#profileModal">
+                        <i class="fas fa-user-circle me-2"></i>
+                        <span class="profile-name">{{ auth()->user()->name }}</span>
+                        <i class="fas fa-chevron-down ms-2 small"></i>
+                    </button>
+                @else
+                    <!-- Static text for Operators -->
+                    <span class="navbar-text">
+                        <i class="fas fa-user-circle me-1"></i>
+                        {{ auth()->user()->name }}
+                    </span>
+                @endif
             </div>
         </div>
     </div>

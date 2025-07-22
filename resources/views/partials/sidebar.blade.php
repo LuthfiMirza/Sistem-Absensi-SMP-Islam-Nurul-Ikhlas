@@ -161,34 +161,7 @@
                     @endif
                 @endif
 
-                <!-- My Profile Section -->
-                <li class="nav-item mb-2 mt-3">
-                    <div class="nav-section-header px-3 py-2">
-                        <small class="text-light opacity-75 fw-bold">PROFIL</small>
-                    </div>
-                </li>
-                
-                <li class="nav-item mb-1">
-                    <div class="nav-link profile-info">
-                        <i class="fas fa-user me-3"></i>
-                        <span>{{ auth()->user()->name }}</span>
-                    </div>
-                </li>
-                
-                <li class="nav-item mb-1">
-                    <div class="nav-link profile-info">
-                        <i class="fas fa-briefcase me-3"></i>
-                        <span>{{ auth()->user()->position->name ?? 'Tidak ada posisi' }}</span>
-                    </div>
-                </li>
-                
-                <li class="nav-item mb-1">
-                    <div class="nav-link profile-info">
-                        <i class="fas fa-envelope me-3"></i>
-                        <span class="small">{{ auth()->user()->email }}</span>
-                    </div>
-                </li>
-            @endif
+                            @endif
         </ul>
 
         <!-- Logout Button -->

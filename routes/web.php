@@ -43,8 +43,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('/holidays', HolidayController::class)->only(['index', 'create']);
         Route::get('/holidays/edit', [HolidayController::class, 'edit'])->name('holidays.edit');
         // attendances (absensi)
-        Route::resource('/attendances', AttendanceController::class)->only(['index', 'create', 'show']);
-        Route::get('/attendances/edit', [AttendanceController::class, 'edit'])->name('attendances.edit');
+        Route::resource('/attendances', AttendanceController::class)->only(['index', 'create', 'show', 'edit']);
 
         // presences (kehadiran)
         Route::resource('/presences', PresenceController::class)->only(['index']);
