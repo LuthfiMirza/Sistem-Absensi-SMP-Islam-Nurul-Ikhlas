@@ -73,4 +73,9 @@ class Attendance extends Model
     {
         return $this->hasMany(Presence::class);
     }
+
+    public function permissions()
+    {
+        return $this->hasMany(Permission::class);
+    }
 }

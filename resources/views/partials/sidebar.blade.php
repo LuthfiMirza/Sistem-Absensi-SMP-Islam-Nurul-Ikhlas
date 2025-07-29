@@ -94,42 +94,7 @@
                         </div>
                     </li>
                 @endforelse
-
-                <!-- Management Section -->
-                @if($availableAttendances->count() > 0)
-                    @php $firstAttendance = $availableAttendances->first(); @endphp
-                    
-                    <li class="nav-item mb-2 mt-3">
-                        <div class="nav-section-header px-3 py-2">
-                            <small class="text-light opacity-75 fw-bold">KELOLA ABSENSI</small>
-                        </div>
-                    </li>
-                    
-                    <li class="nav-item mb-1">
-                        <a class="nav-link {{ request()->routeIs('home.detail') ? 'active' : '' }}"
-                           href="{{ route('home.detail', $firstAttendance->id) }}">
-                            <i class="fas fa-chart-line me-3"></i>
-                            <span>Detail Kehadiran</span>
-                        </a>
-                    </li>
-                    
-                    <li class="nav-item mb-1">
-                        <a class="nav-link {{ request()->routeIs('home.permissions') ? 'active' : '' }}"
-                           href="{{ route('home.permissions', $firstAttendance->id) }}">
-                            <i class="fas fa-file-alt me-3"></i>
-                            <span>Data Izin</span>
-                        </a>
-                    </li>
-                    
-                    <li class="nav-item mb-1">
-                        <a class="nav-link {{ request()->routeIs('home.not-present') ? 'active' : '' }}"
-                           href="{{ route('home.not-present', $firstAttendance->id) }}">
-                            <i class="fas fa-user-times me-3"></i>
-                            <span>Belum Absen</span>
-                        </a>
-                    </li>
-                @endif
-
+        
                 <!-- Quick Actions Section -->
                 <li class="nav-item mb-2 mt-3">
                     <div class="nav-section-header px-3 py-2">
@@ -161,7 +126,86 @@
                     @endif
                 @endif
 
-                            @endif
+                <!-- Izin Section -->
+                <li class="nav-item mb-2 mt-3">
+                    <div class="nav-section-header px-3 py-2">
+                        <small class="text-light opacity-75 fw-bold">IZIN</small>
+                    </div>
+                </li>
+                
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('my-permissions.*') ? 'active' : '' }}"
+                       href="{{ route('my-permissions.index') }}">
+                        <i class="fas fa-list me-3"></i>
+                        <span>Data Izin Saya</span>
+                    </a>
+                </li>
+                
+                @if(auth()->user()->isKaryawan())
+                    <li class="nav-item mb-1">
+                        <a class="nav-link {{ request()->routeIs('my-permissions.create') ? 'active' : '' }}"
+                           href="{{ route('my-permissions.create') }}">
+                            <i class="fas fa-plus me-3"></i>
+                            <span>Ajukan Izin Baru</span>
+                        </a>
+                    </li>
+                @endif
+
+                <!-- Profile Section -->
+                <li class="nav-item mb-2 mt-3">
+                    <div class="nav-section-header px-3 py-2">
+                        <small class="text-light opacity-75 fw-bold">PROFIL</small>
+                    </div>
+                </li>
+                
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}"
+                       href="{{ route('profile.index') }}">
+                        <i class="fas fa-user me-3"></i>
+                        <span>Profil Saya</span>
+                    </a>
+                </li>
+            @endif
+
+            @if (auth()->user()->isAdmin() or auth()->user()->isOperator())
+                <!-- Admin Menu Additions -->
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('divisions.*') ? 'active' : '' }}"
+                       href="{{ route('divisions.index') }}">
+                        <i class="fas fa-sitemap me-3"></i>
+                        <span>Divisi</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('permissions.*') ? 'active' : '' }}"
+                       href="{{ route('permissions.index') }}">
+                        <i class="fas fa-file-signature me-3"></i>
+                        <span>Kelola Izin</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"
+                       href="{{ route('reports.index') }}">
+                        <i class="fas fa-chart-bar me-3"></i>
+                        <span>Laporan</span>
+                    </a>
+                </li>
+                
+                <!-- Profile Section for Admin -->
+                <li class="nav-item mb-2 mt-3">
+                    <div class="nav-section-header px-3 py-2">
+                        <small class="text-light opacity-75 fw-bold">PROFIL</small>
+                    </div>
+                </li>
+                
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}"
+                       href="{{ route('profile.index') }}">
+                        <i class="fas fa-user me-3"></i>
+                        <span>Profil Saya</span>
+                    </a>
+                </li>
+            @endif
         </ul>
 
         <!-- Logout Button -->

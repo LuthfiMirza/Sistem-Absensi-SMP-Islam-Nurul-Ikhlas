@@ -17,16 +17,31 @@ class EnsureUserHasRole
      */
     public function handle($request, Closure $next, ...$roles)
     {
-        $userRole = Role::find(auth()->user()->role_id);
+        $user = auth()->user();
+        $userRole = Role::find($user->role_id);
+        
+        // Debug logging
+        \Log::info('Role Middleware Debug', [
+            'user_id' => $user->id,
+            'user_role_id' => $user->role_id,
+            'user_role_name' => $userRole ? $userRole->name : 'null',
+            'required_roles' => $roles,
+            'current_route' => $request->route()->getName()
+        ]);
+        
         foreach ($roles as $role) {
-            // if ($role === "superadmin" && auth()->user()->isSuperadmin()) return $next($request);
-            if ($userRole->name === $role) {
+            if ($userRole && $userRole->name === $role) {
                 return $next($request);
             }
         }
 
-        // return abort(403);
-        $route = in_array($userRole->name, ['karyawan', 'guru']) ? 'home.index' : 'dashboard.index';
+        // Prevent redirect loop to dashboard
+        if ($request->route()->getName() === 'dashboard.index' && $userRole && $userRole->name === 'operator') {
+            \Log::error('Potential redirect loop detected for operator user');
+            return $next($request); // Allow access to prevent loop
+        }
+
+        $route = in_array($userRole->name ?? '', ['karyawan', 'guru']) ? 'home.index' : 'dashboard.index';
         return redirect()->route($route)->with('failed', 'Kamu tidak memiliki izin untuk mengakses halaman tersebut.');
     }
 }

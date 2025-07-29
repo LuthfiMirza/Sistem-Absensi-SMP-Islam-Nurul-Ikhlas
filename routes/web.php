@@ -3,11 +3,14 @@
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\PresenceController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
@@ -29,6 +32,22 @@ Route::get('/', function () {
     }
     return redirect()->route('auth.login');
 });
+
+// Debug route to check user role
+Route::get('/debug-user', function () {
+    if (auth()->check()) {
+        $user = auth()->user();
+        return response()->json([
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'role_id' => $user->role_id,
+            'role_name' => $user->role ? $user->role->name : 'No role',
+            'isOperator' => $user->isOperator(),
+            'isUser' => $user->isUser(),
+        ]);
+    }
+    return response()->json(['message' => 'Not authenticated']);
+})->middleware('auth');
 
 Route::middleware('auth')->group(function () {
     Route::middleware('role:operator')->group(function () {
@@ -58,6 +77,25 @@ Route::middleware('auth')->group(function () {
         Route::post('/presences/{attendance}/acceptPermission', [PresenceController::class, 'acceptPermission'])->name('presences.acceptPermission');
         // employees permissions
         Route::get('/presences/{attendance}/permissions', [PresenceController::class, 'permissions'])->name('presences.permissions');
+        
+        // divisions
+        Route::resource('/divisions', DivisionController::class);
+        
+        // permissions management (operator only)
+        Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
+        Route::get('/permissions/{permission}', [PermissionController::class, 'show'])->name('permissions.show');
+        Route::post('/permissions/{permission}/status', [PermissionController::class, 'updateStatus'])->name('permissions.updateStatus');
+        
+        // Test modal functionality
+        Route::get('/permissions/test/modal', function() {
+            return view('permissions.test-modal', ['title' => 'Test Modal']);
+        })->name('permissions.test.modal');
+        
+        // reports
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/attendance', [ReportController::class, 'attendanceReport'])->name('reports.attendance');
+        Route::get('/reports/recapitulation', [ReportController::class, 'recapitulation'])->name('reports.recapitulation');
+        Route::get('/reports/permissions', [ReportController::class, 'permissionReport'])->name('reports.permissions');
     });
 
     Route::middleware('role:karyawan,guru')->name('home.')->group(function () {
@@ -68,12 +106,33 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/absensi/{attendance}', [HomeController::class, 'show'])->name('show');
         Route::get('/absensi/{attendance}/permission', [HomeController::class, 'permission'])->name('permission');
-        
+    });
+
+    // Routes khusus untuk karyawan (bukan guru)
+    Route::middleware('role:karyawan')->name('home.')->group(function () {
         // Additional routes for accessing presence management pages (read-only for employees)
         Route::get('/absensi/{attendance}/detail', [PresenceController::class, 'show'])->name('detail');
         Route::get('/absensi/{attendance}/permissions', [PresenceController::class, 'permissions'])->name('permissions');
         Route::get('/absensi/{attendance}/not-present', [PresenceController::class, 'notPresent'])->name('not-present');
     });
+
+    // Permission routes for employees only (not guru)
+    Route::middleware('role:karyawan')->group(function () {
+        Route::resource('/my-permissions', PermissionController::class)->except(['index', 'show']);
+    });
+    
+    // View permissions for all authenticated users
+    Route::get('/my-permissions', [PermissionController::class, 'index'])->name('my-permissions.index');
+    Route::get('/my-permissions/{permission}', [PermissionController::class, 'show'])->name('my-permissions.show');
+    
+    // Permission creation route for karyawan only
+    Route::middleware('role:karyawan')->group(function () {
+        Route::get('/my-permissions/create', [PermissionController::class, 'create'])->name('my-permissions.create');
+    });
+
+    // Profile and password update routes for all authenticated users
+    Route::get('/profile', [AuthController::class, 'profile'])->name('profile.index');
+    Route::put('/profile/password', [AuthController::class, 'updatePassword'])->name('profile.password.update');
 
     Route::delete('/logout', [AuthController::class, 'logout'])->name('auth.logout');
     

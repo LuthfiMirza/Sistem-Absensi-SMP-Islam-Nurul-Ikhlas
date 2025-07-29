@@ -17,13 +17,13 @@ class RoleSeeder extends Seeder
     public function run()
     {
         Role::create([
-            'name' => 'admin',
+            'name' => 'operator', // ID 1
         ]);
         Role::create([
-            'name' => 'operator',
+            'name' => 'karyawan', // ID 2
         ]);
         Role::create([
-            'name' => 'user', // Asisten
+            'name' => 'guru', // ID 3
         ]);
     }
 }
