@@ -392,14 +392,13 @@
                                 </td>
                                 @if(auth()->user()->isOperator())
                                 <td>
-                                    <form action="{{ route('presences.present', $attendance->id) }}" method="post" class="d-inline">
+                                    <form action="{{ route('presences.present', $attendance->id) }}" method="post" class="d-inline present-form" data-user-id="{{ $user['id'] }}" data-user-name="{{ $user['name'] }}">
                                         @csrf
                                         <input type="hidden" name="user_id" value="{{ $user['id'] }}">
                                         <input type="hidden" name="presence_date" value="{{ $data['not_presence_date'] }}">
-                                        <button class="action-badge badge-present" type="submit" 
-                                                onclick="return confirm('Apakah Anda yakin ingin menandai {{ $user['name'] }} sebagai hadir?')">
+                                        <button class="action-badge badge-present present-btn" type="submit">
                                             <i class="fas fa-check me-1"></i>
-                                            Tandai Hadir
+                                            <span class="btn-text">Tandai Hadir</span>
                                         </button>
                                     </form>
                                 </td>
@@ -416,30 +415,162 @@
 @endsection
 
 @push('script')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // Add loading state for action buttons
     document.addEventListener('DOMContentLoaded', function() {
-        const actionBadges = document.querySelectorAll('.action-badge');
+        // Handle present form submissions with AJAX
+        const presentForms = document.querySelectorAll('.present-form');
         
-        actionBadges.forEach(badge => {
-            badge.addEventListener('click', function(e) {
-                if (this.type === 'submit') {
-                    const icon = this.querySelector('i');
-                    const originalClass = icon.className;
-                    const originalText = this.innerHTML;
-                    
-                    // Show loading state
-                    this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...';
-                    this.disabled = true;
-                    
-                    // Reset after form submission
-                    setTimeout(() => {
-                        this.innerHTML = originalText;
-                        this.disabled = false;
-                    }, 3000);
-                }
+        presentForms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const userId = this.dataset.userId;
+                const userName = this.dataset.userName;
+                const submitBtn = this.querySelector('.present-btn');
+                const btnText = submitBtn.querySelector('.btn-text');
+                const btnIcon = submitBtn.querySelector('i');
+                const tableRow = this.closest('tr');
+                
+                // Show confirmation dialog
+                Swal.fire({
+                    title: 'Konfirmasi Kehadiran',
+                    text: `Apakah Anda yakin ingin menandai ${userName} sebagai hadir?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Tandai Hadir!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Show loading state
+                        submitBtn.disabled = true;
+                        btnIcon.className = 'fas fa-spinner fa-spin me-1';
+                        btnText.textContent = 'Memproses...';
+                        
+                        // Submit form via AJAX
+                        const formData = new FormData(this);
+                        
+                        fetch(this.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Show success message
+                                Swal.fire({
+                                    title: 'Berhasil!',
+                                    text: data.message || `${userName} berhasil ditandai hadir.`,
+                                    icon: 'success',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                                
+                                // Animate row removal
+                                tableRow.style.transition = 'all 0.5s ease';
+                                tableRow.style.backgroundColor = '#d4edda';
+                                tableRow.style.transform = 'scale(0.95)';
+                                tableRow.style.opacity = '0.7';
+                                
+                                setTimeout(() => {
+                                    tableRow.style.height = '0';
+                                    tableRow.style.padding = '0';
+                                    tableRow.style.margin = '0';
+                                    tableRow.style.border = 'none';
+                                    
+                                    setTimeout(() => {
+                                        tableRow.remove();
+                                        updateEmployeeCount();
+                                        checkIfAllPresent();
+                                    }, 300);
+                                }, 1000);
+                                
+                            } else {
+                                // Show error message
+                                Swal.fire({
+                                    title: 'Gagal!',
+                                    text: data.message || 'Terjadi kesalahan saat menandai kehadiran.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                                
+                                // Reset button state
+                                resetButtonState(submitBtn, btnIcon, btnText);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                title: 'Error!',
+                                text: 'Terjadi kesalahan jaringan. Silakan coba lagi.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                            
+                            // Reset button state
+                            resetButtonState(submitBtn, btnIcon, btnText);
+                        });
+                    }
+                });
             });
         });
+        
+        function resetButtonState(btn, icon, text) {
+            btn.disabled = false;
+            icon.className = 'fas fa-check me-1';
+            text.textContent = 'Tandai Hadir';
+        }
+        
+        function updateEmployeeCount() {
+            const dateHeaders = document.querySelectorAll('.date-header');
+            dateHeaders.forEach(header => {
+                const table = header.nextElementSibling;
+                const rows = table.querySelectorAll('tbody tr');
+                const countElement = header.querySelector('.date-item:last-child .fw-bold');
+                const newCount = rows.length;
+                countElement.textContent = `${newCount} Karyawan`;
+            });
+        }
+        
+        function checkIfAllPresent() {
+            const allTables = document.querySelectorAll('.absent-table tbody');
+            let totalRows = 0;
+            
+            allTables.forEach(tbody => {
+                totalRows += tbody.querySelectorAll('tr').length;
+            });
+            
+            if (totalRows === 0) {
+                // Show all present message
+                setTimeout(() => {
+                    const contentSection = document.querySelector('.container-fluid');
+                    const emptyStateHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-check-circle"></i>
+                            <h4 class="text-success mb-3">Semua Karyawan Sudah Absen!</h4>
+                            <p class="text-muted mb-4">Semua karyawan telah berhasil ditandai hadir.</p>
+                            <button onclick="window.location.reload()" class="btn btn-primary">
+                                <i class="fas fa-refresh me-2"></i>
+                                Refresh Halaman
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Remove existing content and show empty state
+                    const existingContent = contentSection.querySelectorAll('.date-header, .absent-table');
+                    existingContent.forEach(el => el.remove());
+                    
+                    contentSection.insertAdjacentHTML('beforeend', emptyStateHTML);
+                }, 500);
+            }
+        }
         
         // Add smooth animations
         const tables = document.querySelectorAll('.absent-table');
@@ -453,22 +584,22 @@
                 table.style.transform = 'translateY(0)';
             }, index * 200);
         });
-    });
-    
-    // Auto-refresh functionality
-    function autoRefresh() {
-        const refreshInterval = 300000; // 5 minutes
         
-        setTimeout(() => {
-            if (confirm('Data akan diperbarui otomatis. Lanjutkan?')) {
-                window.location.reload();
-            }
-        }, refreshInterval);
-    }
-    
-    // Start auto-refresh if there are absent employees
-    if (document.querySelectorAll('.absent-table').length > 0) {
-        autoRefresh();
-    }
+        // Auto-refresh functionality (reduced frequency since we have real-time updates)
+        function autoRefresh() {
+            const refreshInterval = 600000; // 10 minutes (increased since we have AJAX)
+            
+            setTimeout(() => {
+                if (confirm('Data akan diperbarui otomatis untuk sinkronisasi. Lanjutkan?')) {
+                    window.location.reload();
+                }
+            }, refreshInterval);
+        }
+        
+        // Start auto-refresh if there are absent employees
+        if (document.querySelectorAll('.absent-table').length > 0) {
+            autoRefresh();
+        }
+    });
 </script>
 @endpush

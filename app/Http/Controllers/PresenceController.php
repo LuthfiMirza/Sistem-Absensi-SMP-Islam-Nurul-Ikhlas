@@ -132,19 +132,47 @@ class PresenceController extends Controller
             ->first();
 
         // jika data user yang didapatkan dari request user_id, presence_date, sudah absen atau sudah ada ditable presences
-        if ($presence || !$user)
+        if ($presence || !$user) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Request tidak diterima. Karyawan mungkin sudah absen atau data tidak valid.'
+                ]);
+            }
             return back()->with('failed', 'Request tidak diterima.');
+        }
 
-        Presence::create([
-            "attendance_id" => $attendance->id,
-            "user_id" => $user->id,
-            "presence_date" => $validated['presence_date'],
-            "presence_enter_time" => now()->toTimeString(),
-            "presence_out_time" => now()->toTimeString()
-        ]);
+        try {
+            Presence::create([
+                "attendance_id" => $attendance->id,
+                "user_id" => $user->id,
+                "presence_date" => $validated['presence_date'],
+                "presence_enter_time" => now()->toTimeString(),
+                "presence_out_time" => now()->toTimeString()
+            ]);
 
-        return back()
-            ->with('success', "Berhasil menyimpan data hadir atas nama \"$user->name\".");
+            $message = "Berhasil menyimpan data hadir atas nama \"$user->name\".";
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'user_id' => $user->id,
+                    'user_name' => $user->name
+                ]);
+            }
+
+            return back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat menyimpan data kehadiran.'
+                ]);
+            }
+            return back()->with('failed', 'Terjadi kesalahan saat menyimpan data kehadiran.');
+        }
     }
 
     public function acceptPermission(Request $request, Attendance $attendance)
@@ -182,7 +210,7 @@ class PresenceController extends Controller
         ]);
 
         $permission->update([
-            'is_accepted' => 1
+            'status' => 'accepted'
         ]);
 
         return back()

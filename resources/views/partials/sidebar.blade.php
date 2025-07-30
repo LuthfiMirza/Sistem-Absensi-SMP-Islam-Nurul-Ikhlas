@@ -27,15 +27,15 @@
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('positions.*') ? 'active' : '' }}"
                        href="{{ route('positions.index') }}">
-                        <i class="fas fa-building me-3"></i>
-                        <span>Divisi</span>
+                        <i class="fas fa-sitemap me-3"></i>
+                        <span>Divisi Pegawai</span>
                     </a>
                 </li>
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('employees.*') ? 'active' : '' }}"
                        href="{{ route('employees.index') }}">
-                        <i class="fas fa-chalkboard-teacher me-3"></i>
-                        <span>Guru</span>
+                        <i class="fas fa-users me-3"></i>
+                        <span>Pegawai</span>
                     </a>
                 </li>
                 <li class="nav-item mb-1">
@@ -169,13 +169,7 @@
 
             @if (auth()->user()->isAdmin() or auth()->user()->isOperator())
                 <!-- Admin Menu Additions -->
-                <li class="nav-item mb-1">
-                    <a class="nav-link {{ request()->routeIs('divisions.*') ? 'active' : '' }}"
-                       href="{{ route('divisions.index') }}">
-                        <i class="fas fa-sitemap me-3"></i>
-                        <span>Divisi</span>
-                    </a>
-                </li>
+                
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('permissions.*') ? 'active' : '' }}"
                        href="{{ route('permissions.index') }}">

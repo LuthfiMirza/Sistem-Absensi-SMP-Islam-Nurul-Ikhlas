@@ -14,19 +14,48 @@ class PermissionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $query = Permission::with(['user', 'attendance']);
+        $query = Permission::with(['user', 'user.position', 'attendance']);
         
         // If user is not operator, only show their own permissions
         if (!auth()->user()->isOperator()) {
             $query->where('user_id', auth()->id());
         }
         
-        $permissions = $query->latest()->paginate(10);
+        // Apply filters for operators
+        if (auth()->user()->isOperator()) {
+            // Filter by status
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+            
+            // Filter by type
+            if ($request->filled('type')) {
+                $query->where('type', $request->type);
+            }
+            
+            // Filter by date range
+            if ($request->filled('date_from')) {
+                $query->whereDate('permission_date', '>=', $request->date_from);
+            }
+            
+            if ($request->filled('date_to')) {
+                $query->whereDate('permission_date', '<=', $request->date_to);
+            }
+            
+            // Search by user name
+            if ($request->filled('search')) {
+                $query->whereHas('user', function($q) use ($request) {
+                    $q->where('name', 'like', '%' . $request->search . '%');
+                });
+            }
+        }
+        
+        $permissions = $query->latest()->paginate(15);
 
         return view('permissions.index', [
-            'title' => 'Data Izin',
+            'title' => auth()->user()->isOperator() ? 'Data Izin Karyawan' : 'Izin Saya',
             'permissions' => $permissions
         ]);
     }
@@ -209,11 +238,36 @@ class PermissionController extends Controller
      */
     public function destroy(Permission $permission)
     {
-        // Only allow deletion if user is the owner and permission is still pending
-        if ($permission->user_id !== auth()->id() || !$permission->isPending()) {
-            abort(403);
+        // Check authorization
+        if (auth()->user()->isOperator()) {
+            // Operators can delete any permission
+            $this->deletePermissionFiles($permission);
+            $permission->delete();
+            
+            return redirect()->route('permissions.index')
+                ->with('success', "Izin atas nama \"{$permission->user->name}\" berhasil dihapus");
+        } else {
+            // Users can only delete their own pending permissions
+            if ($permission->user_id !== auth()->id() || !$permission->isPending()) {
+                abort(403, 'Anda tidak memiliki izin untuk menghapus data ini');
+            }
+            
+            $this->deletePermissionFiles($permission);
+            $permission->delete();
+            
+            return redirect()->route('my-permissions.index')
+                ->with('success', 'Izin berhasil dihapus');
         }
-
+    }
+    
+    /**
+     * Delete permission related files
+     *
+     * @param  Permission  $permission
+     * @return void
+     */
+    private function deletePermissionFiles(Permission $permission)
+    {
         // Delete uploaded files
         if ($permission->medical_certificate) {
             Storage::disk('public')->delete($permission->medical_certificate);
@@ -221,65 +275,5 @@ class PermissionController extends Controller
         if ($permission->proof_document) {
             Storage::disk('public')->delete($permission->proof_document);
         }
-
-        $permission->delete();
-
-        return redirect()->route('permissions.index')
-            ->with('success', 'Izin berhasil dihapus');
-    }
-
-    /**
-     * Update permission status - simplified workflow
-     */
-    public function updateStatus(Request $request, Permission $permission)
-    {
-        // Add debugging
-        \Log::info('updateStatus called', [
-            'permission_id' => $permission->id,
-            'request_data' => $request->all(),
-            'user_id' => auth()->id(),
-            'user_role' => auth()->user()->role->name ?? 'no role'
-        ]);
-
-        $request->validate([
-            'action' => 'required|in:accept,reject',
-            'rejection_reason' => 'required_if:action,reject|string'
-        ]);
-
-        // Only allow status update if permission is still pending
-        if (!$permission->isPending()) {
-            \Log::warning('Permission not pending', [
-                'permission_id' => $permission->id,
-                'current_status' => $permission->status
-            ]);
-            return redirect()->back()
-                ->withErrors(['status' => 'Izin sudah diproses dan tidak dapat diubah lagi']);
-        }
-
-        $action = $request->action;
-        $message = '';
-
-        switch ($action) {
-            case 'accept':
-                $permission->update(['status' => 'accepted']);
-                $message = 'Izin berhasil diterima';
-                \Log::info('Permission accepted', ['permission_id' => $permission->id]);
-                break;
-            
-            case 'reject':
-                $permission->update([
-                    'status' => 'rejected',
-                    'rejection_reason' => $request->rejection_reason
-                ]);
-                $message = 'Izin berhasil ditolak';
-                \Log::info('Permission rejected', [
-                    'permission_id' => $permission->id,
-                    'reason' => $request->rejection_reason
-                ]);
-                break;
-        }
-        
-        return redirect()->back()
-            ->with('success', $message);
     }
 }

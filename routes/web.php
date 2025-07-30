@@ -12,7 +12,6 @@ use App\Http\Controllers\PositionController;
 use App\Http\Controllers\PresenceController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
-use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,11 +52,13 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:operator')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
         // positions
-        Route::resource('/positions', PositionController::class)->only(['index', 'create']);
-        Route::get('/positions/edit', [PositionController::class, 'edit'])->name('positions.edit');
+        Route::resource('/positions', PositionController::class);
+        Route::get('/positions/bulk-edit', [PositionController::class, 'bulkEdit'])->name('positions.bulk-edit');
+        Route::delete('/positions/bulk-delete', [PositionController::class, 'bulkDelete'])->name('positions.bulk-delete');
         // employees
-        Route::resource('/employees', EmployeeController::class)->only(['index', 'create']);
-        Route::get('/employees/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
+        Route::resource('/employees', EmployeeController::class);
+        Route::get('/employees/bulk-edit', [EmployeeController::class, 'edit'])->name('employees.bulk-edit');
+        Route::delete('/employees/bulk-delete', [EmployeeController::class, 'bulkDelete'])->name('employees.bulk-delete');
         // holidays (hari libur)
         Route::resource('/holidays', HolidayController::class)->only(['index', 'create']);
         Route::get('/holidays/edit', [HolidayController::class, 'edit'])->name('holidays.edit');
@@ -81,15 +82,10 @@ Route::middleware('auth')->group(function () {
         // divisions
         Route::resource('/divisions', DivisionController::class);
         
-        // permissions management (operator only)
+        // permissions management (operator only) - view and delete
         Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
         Route::get('/permissions/{permission}', [PermissionController::class, 'show'])->name('permissions.show');
-        Route::post('/permissions/{permission}/status', [PermissionController::class, 'updateStatus'])->name('permissions.updateStatus');
-        
-        // Test modal functionality
-        Route::get('/permissions/test/modal', function() {
-            return view('permissions.test-modal', ['title' => 'Test Modal']);
-        })->name('permissions.test.modal');
+        Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
         
         // reports
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
@@ -100,7 +96,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:karyawan,guru')->name('home.')->group(function () {
         Route::get('/home', [HomeController::class, 'index'])->name('index');
-        // desctination after scan qrcode
+        // destination after scan qrcode
         Route::post('/absensi/qrcode', [HomeController::class, 'sendEnterPresenceUsingQRCode'])->name('sendEnterPresenceUsingQRCode');
         Route::post('/absensi/qrcode/out', [HomeController::class, 'sendOutPresenceUsingQRCode'])->name('sendOutPresenceUsingQRCode');
 

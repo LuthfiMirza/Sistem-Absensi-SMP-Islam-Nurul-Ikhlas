@@ -5,12 +5,12 @@
     <div>
         <a href="{{ route('positions.create') }}" class="btn btn-sm btn-primary">
             <i class="fas fa-plus-circle me-1"></i>
-            Tambah Divisi/Mata Pelajaran
+            Tambah Divisi Pegawai
         </a>
     </div>
 </div>
 @endsection
 
 @section('content')
-<livewire:simple-position-table />
+@include('positions.table')
 @endsection

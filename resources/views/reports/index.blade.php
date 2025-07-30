@@ -139,7 +139,7 @@
                                 Izin Disetujui Bulan Ini
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ \App\Models\Permission::where('is_accepted', true)->whereMonth('created_at', now()->month)->count() }}
+                                {{ \App\Models\Permission::where('status', 'accepted')->whereMonth('created_at', now()->month)->count() }}
                             </div>
                         </div>
                         <div class="col-auto">
@@ -159,7 +159,7 @@
                                 Izin Pending
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ \App\Models\Permission::whereNull('is_accepted')->count() }}
+                                {{ \App\Models\Permission::where('status', 'pending')->count() }}
                             </div>
                         </div>
                         <div class="col-auto">

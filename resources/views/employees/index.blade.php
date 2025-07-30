@@ -5,12 +5,12 @@
     <div>
         <a href="{{ route('employees.create') }}" class="btn btn-sm btn-primary">
             <i class="fas fa-plus-circle me-1"></i>
-            Tambah Data Guru/Karyawan
+            Tambah Data Pegawai
         </a>
     </div>
 </div>
 @endsection
 
 @section('content')
-<livewire:simple-employee-table />
+@include('employees.table')
 @endsection

@@ -101,7 +101,7 @@ class ReportController extends Controller
                     if ($presence->presence_enter_time > $attendance->start_time) {
                         $userData['late_days']++;
                     }
-                } elseif ($permission && $permission->is_accepted) {
+                } elseif ($permission && $permission->status === 'accepted') {
                     $userData['permission_days']++;
                 } else {
                     $userData['absent_days']++;
@@ -150,13 +150,7 @@ class ReportController extends Controller
         }
 
         if ($request->status) {
-            if ($request->status === 'pending') {
-                $query->whereNull('is_accepted');
-            } elseif ($request->status === 'accepted') {
-                $query->where('is_accepted', true);
-            } else {
-                $query->where('is_accepted', false);
-            }
+            $query->where('status', $request->status);
         }
 
         $permissions = $query->latest()->get();

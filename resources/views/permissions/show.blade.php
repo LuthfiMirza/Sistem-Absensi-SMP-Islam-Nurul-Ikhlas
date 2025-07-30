@@ -192,25 +192,12 @@
 
                     <!-- Action Buttons -->
                     <div class="d-flex justify-content-between">
-                        <a href="{{ route('my-permissions.index') }}" class="btn btn-secondary">
+                        <a href="{{ route('permissions.index') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Kembali
                         </a>
                         
                         <div>
-                            @if(auth()->user()->isOperator())
-                                @if($permission->isPending())
-                                    <button type="button" 
-                                            class="btn btn-success me-2" 
-                                            onclick="updatePermissionStatus({{ $permission->id }}, 'accept')">
-                                        <i class="fas fa-check me-2"></i>Terima
-                                    </button>
-                                    <button type="button" 
-                                            class="btn btn-danger" 
-                                            onclick="updatePermissionStatus({{ $permission->id }}, 'reject')">
-                                        <i class="fas fa-times me-2"></i>Tolak
-                                    </button>
-                                @endif
-                            @elseif($permission->user_id === auth()->id() && $permission->isPending())
+                            @if(!auth()->user()->isOperator() && $permission->user_id === auth()->id() && $permission->isPending())
                                 <a href="{{ route('my-permissions.edit', $permission) }}" class="btn btn-warning me-2">
                                     <i class="fas fa-edit me-2"></i>Edit
                                 </a>
@@ -232,40 +219,6 @@
         </div>
     </div>
 </div>
-
-<!-- Status Update Modal -->
-@if(auth()->user()->isOperator())
-<div class="modal fade" id="statusModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Update Status Izin</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="statusForm" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <input type="hidden" name="action" id="actionValue">
-                    <div id="rejectionReason" style="display: none;">
-                        <label for="rejection_reason" class="form-label">Alasan Penolakan</label>
-                        <textarea class="form-control" 
-                                  id="rejection_reason" 
-                                  name="rejection_reason" 
-                                  rows="3" 
-                                  placeholder="Masukkan alasan penolakan..." 
-                                  required></textarea>
-                    </div>
-                    <div id="confirmationText"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary" id="confirmButton">Konfirmasi</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@endif
 @endsection
 
 @push('style')
@@ -293,24 +246,4 @@
     border-radius: 10px;
 }
 </style>
-@endpush
-
-@push('script')
-@if(auth()->user()->isOperator())
-<script>
-// Ensure permissions.js is only loaded once
-if (!window.permissionsJsLoaded) {
-    window.permissionsJsLoaded = true;
-    const script = document.createElement('script');
-    script.src = '{{ asset('js/permissions.js') }}';
-    script.onload = function() {
-        console.log('Permissions.js loaded successfully from show page');
-    };
-    script.onerror = function() {
-        console.error('Failed to load permissions.js');
-    };
-    document.head.appendChild(script);
-}
-</script>
-@endif
 @endpush
